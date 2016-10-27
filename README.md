@@ -68,7 +68,7 @@ Data can be persisted within OpenShift by adding a Persistent Volume Claim to th
 
 Nexus can be configured to proxy and group repositories. The folder `rh` in this repository contains a Dockerfile based on a build of either oss/ or pro/ within the context of the current OpenShift namespace. It assumes that a previous image for `docker-nexus` exists, and will simply overlay a full configuration over the base configuration, which contains all the Red Hat Maven repositories, along with a Group repository call `redhat-all` - an amalgamation of every other Red Hat repository. This is provided for ease of use.
 
-To use, build either oss or pro:
+To use, build either oss or pro (assuming a build doesn't currently exist):
 ```
 # oc new-build --strategy=docker --context-dir=oss http://github.com/benemon 
 # oc new-build --strategy=docker --context-dir=pro http://github.com/benemon
