@@ -18,7 +18,7 @@ LABEL vendor=Sonatype \
   com.sonatype.license="Apache License, Version 2.0" \
   com.sonatype.name="Nexus Repository Manager OSS base image"
 
-ENV SONATYPE_WORK="/opt/sonatype/sonatype-work" SONATYPE_INSTALL="/opt/sonatype/nexus" NEXUS_VERSION="2.14.1-01"
+ENV SONATYPE_HOME="/opt/sonatype/" SONATYPE_WORK="/opt/sonatype/sonatype-work" SONATYPE_INSTALL="/opt/sonatype/nexus" NEXUS_VERSION="2.14.1-01"
 
 # ENV JAVA_HOME /opt/java
 # ENV JAVA_VERSION_MAJOR 8
@@ -55,13 +55,9 @@ WORKDIR ${SONATYPE_INSTALL}
 # USER nexus
 
 # OpenShift permissions
-RUN chgrp -R 0 ${SONATYPE_WORK}
+RUN chgrp -R 0 ${SONATYPE_HOME}
 RUN chmod -R g+rw ${SONATYPE_WORK}
 RUN find ${SONATYPE_WORK} -type d -exec chmod g+x {} +
-
-RUN chgrp -R 0 ${SONATYPE_INSTALL}
-RUN chmod -R g+rw ${SONATYPE_INSTALL}
-RUN find ${SONATYPE_INSTALL} -type d -exec chmod g+x {} +
 
 ENV MAX_HEAP=768m MIN_HEAP=256m JAVA_OPTS="-server -Djava.net.preferIPv4Stack=true" LAUNCHER_CONF="./conf/jetty.xml ./conf/jetty-requestlog.xml"
 
