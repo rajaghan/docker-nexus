@@ -59,11 +59,11 @@ RUN chgrp -R 0 ${SONATYPE_HOME}
 RUN chmod -R g+rw ${SONATYPE_HOME}
 RUN find ${SONATYPE_HOME} -type d -exec chmod g+x {} +
 
-ENV MAX_HEAP=768m MIN_HEAP=256m JAVA_OPTS="-server -Djava.net.preferIPv4Stack=true" LAUNCHER_CONF="./conf/jetty.xml ./conf/jetty-requestlog.xml"
+ENV MAX_HEAP=768m MIN_HEAP=256m JAVA_OPTS="-server -Djava.net.preferIPv4Stack=true" LAUNCHER_CONF="./conf/jetty.xml ./conf/jetty-requestlog.xml" CONTEXT_PATH="/nexus"
 
 CMD java \
   -Dnexus-work=${SONATYPE_WORK} \
-  -Dnexus-webapp-context-path=  \
+  -Dnexus-webapp-context-path=${CONTEXT_PATH}  \
   -Xms${MIN_HEAP} -Xmx${MAX_HEAP} \
   -cp 'conf/:lib/*' \
   ${JAVA_OPTS} \
