@@ -20,39 +20,23 @@ LABEL vendor=Sonatype \
 
 ENV SONATYPE_HOME="/opt/sonatype/" SONATYPE_WORK="/opt/sonatype/sonatype-work" SONATYPE_INSTALL="/opt/sonatype/nexus" NEXUS_VERSION="2.14.1-01"
 
-# ENV JAVA_HOME /opt/java
-# ENV JAVA_VERSION_MAJOR 8
-# ENV JAVA_VERSION_MINOR 102
-# ENV JAVA_VERSION_BUILD 14
-             
 RUN yum install -y \
   curl tar createrepo java \
   && yum clean all
 
-# install Oracle JRE
-#RUN mkdir -p /opt \
-#  && curl --fail --silent --location --retry 3 \
-#  --header "Cookie: oraclelicense=accept-securebackup-cookie; " \
-#  http://download.oracle.com/otn-pub/java/jdk/${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-b${JAVA_VERSION_BUILD}/server-jre-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64.tar.gz \
-#  | gunzip \
-#  | tar -x -C /opt \
-#  && ln -s /opt/jdk1.${JAVA_VERSION_MAJOR}.0_${JAVA_VERSION_MINOR} ${JAVA_HOME}
-
 RUN mkdir -p ${SONATYPE_INSTALL} \
   && curl --fail --silent --location --retry 3 \
-    https://download.sonatype.com/nexus/oss/nexus-${NEXUS_VERSION}-bundle.tar.gz \
+     https://download.sonatype.com/nexus/oss/nexus-${NEXUS_VERSION}-bundle.tar.gz \
   | gunzip \
   | tar x -C /tmp nexus-${NEXUS_VERSION} \
   && mv /tmp/nexus-${NEXUS_VERSION}/* ${SONATYPE_INSTALL} \
   && rm -rf /tmp/nexus-${NEXUS_VERSION}
 
-# RUN useradd -r -u 200 -m -c "nexus role account" -d ${SONATYPE_WORK} -s /bin/false nexus
-
-# VOLUME ${SONATYPE_WORK}
 
 EXPOSE 8081
 WORKDIR ${SONATYPE_INSTALL}
-# USER nexus
+
+ADD conf/ ${SONATYPE_WORK}/
 
 # OpenShift permissions
 RUN chgrp -R 0 ${SONATYPE_HOME}

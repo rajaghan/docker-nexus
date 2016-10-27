@@ -12,55 +12,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM       centos:centos7
+FROM registry.access.redhat.com/rhel7:latest
 MAINTAINER Sonatype <cloud-ops@sonatype.com>
 LABEL vendor=Sonatype \
   com.sonatype.license="Apache License, Version 2.0" \
   com.sonatype.name="Nexus Repository Manager Pro base image"
 
-ENV SONATYPE_WORK /sonatype-work
-ENV NEXUS_VERSION 2.14.0-01
-
-ENV JAVA_HOME /opt/java
-ENV JAVA_VERSION_MAJOR 8
-ENV JAVA_VERSION_MINOR 102
-ENV JAVA_VERSION_BUILD 14
-
+ENV SONATYPE_HOME="/opt/sonatype/" SONATYPE_WORK="/opt/sonatype/sonatype-work" SONATYPE_INSTALL="/opt/sonatype/nexus" NEXUS_VERSION="2.14.1-01"
+             
 RUN yum install -y \
-  curl tar createrepo \
+  curl tar createrepo java \
   && yum clean all
 
-# install Oracle JRE
-RUN mkdir -p /opt \
-  && curl --fail --silent --location --retry 3 \
-  --header "Cookie: oraclelicense=accept-securebackup-cookie; " \
-  http://download.oracle.com/otn-pub/java/jdk/${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-b${JAVA_VERSION_BUILD}/server-jre-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64.tar.gz \
-  | gunzip \
-  | tar -x -C /opt \
-  && ln -s /opt/jdk1.${JAVA_VERSION_MAJOR}.0_${JAVA_VERSION_MINOR} ${JAVA_HOME}
-
-RUN mkdir -p /opt/sonatype/nexus \
-  && curl --fail --silent --location --retry 3 \
-    https://download.sonatype.com/nexus/professional-bundle/nexus-professional-${NEXUS_VERSION}-bundle.tar.gz \
+RUN mkdir -p ${SONATYPE_INSTALL} \
+  && curl --fail --silent --location --retry 3 \ 
+     https://download.sonatype.com/nexus/professional-bundle/nexus-professional-${NEXUS_VERSION}-bundle.tar.gz \
   | gunzip \
   | tar x -C /tmp nexus-professional-${NEXUS_VERSION} \
-  && mv /tmp/nexus-professional-${NEXUS_VERSION}/* /opt/sonatype/nexus/ \
+  && mv /tmp/nexus-professional-${NEXUS_VERSION}/* ${SONATYPE_INSTALL} \
   && rm -rf /tmp/nexus-professional-${NEXUS_VERSION}
 
-RUN useradd -r -u 200 -m -c "nexus role account" -d ${SONATYPE_WORK} -s /bin/false nexus
-
-VOLUME ${SONATYPE_WORK}
-
 EXPOSE 8081
-WORKDIR /opt/sonatype/nexus
-USER nexus
-ENV CONTEXT_PATH /nexus
-ENV MAX_HEAP 768m
-ENV MIN_HEAP 256m
-ENV JAVA_OPTS -server -Djava.net.preferIPv4Stack=true
-ENV LAUNCHER_CONF ./conf/jetty.xml ./conf/jetty-requestlog.xml
-CMD ${JAVA_HOME}/bin/java \
-  -Dnexus-work=${SONATYPE_WORK} -Dnexus-webapp-context-path=${CONTEXT_PATH} \
+WORKDIR ${SONATYPE_INSTALL}
+
+# OpenShift permissions
+RUN chgrp -R 0 ${SONATYPE_HOME}
+RUN chmod -R g+rw ${SONATYPE_HOME}
+RUN find ${SONATYPE_HOME} -type d -exec chmod g+x {} +
+
+ENV MAX_HEAP=768m MIN_HEAP=256m JAVA_OPTS="-server -Djava.net.preferIPv4Stack=true" LAUNCHER_CONF="./conf/jetty.xml ./conf/jetty-requestlog.xml" CONTEXT_PATH="/nexus"
+
+CMD java \
+  -Dnexus-work=${SONATYPE_WORK} \
+  -Dnexus-webapp-context-path=  \
   -Xms${MIN_HEAP} -Xmx${MAX_HEAP} \
   -cp 'conf/:lib/*' \
   ${JAVA_OPTS} \
