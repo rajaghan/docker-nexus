@@ -18,7 +18,7 @@ LABEL vendor=Sonatype \
   com.sonatype.license="Apache License, Version 2.0" \
   com.sonatype.name="Nexus Repository Manager OSS base image"
 
-ENV SONATYPE_WORK="/sonatype-work" SONATYPE_INSTALL="/opt/sonatype/nexus" NEXUS_VERSION="2.14.1-01"
+ENV SONATYPE_WORK="/opt/sonatype/sonatype-work" SONATYPE_INSTALL="/opt/sonatype/nexus" NEXUS_VERSION="2.14.1-01"
 
 # ENV JAVA_HOME /opt/java
 # ENV JAVA_VERSION_MAJOR 8
@@ -67,6 +67,7 @@ ENV MAX_HEAP=768m MIN_HEAP=256m JAVA_OPTS="-server -Djava.net.preferIPv4Stack=tr
 
 CMD java \
   -Dnexus-work=${SONATYPE_WORK} \
+  -Dnexus-webapp-context-path=  \
   -Xms${MIN_HEAP} -Xmx${MAX_HEAP} \
   -cp 'conf/:lib/*' \
   ${JAVA_OPTS} \
