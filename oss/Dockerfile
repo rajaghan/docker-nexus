@@ -57,11 +57,11 @@ WORKDIR ${SONATYPE_INSTALL}
 # OpenShift permissions
 RUN chgrp -R 0 ${SONATYPE_WORK}
 RUN chmod -R g+rw ${SONATYPE_WORK}
-RUN find ${SONATYPE_WORK}-type d -exec chmod g+x {} +
+RUN find ${SONATYPE_WORK} -type d -exec chmod g+x {} +
 
 RUN chgrp -R 0 ${SONATYPE_INSTALL}
 RUN chmod -R g+rw ${SONATYPE_INSTALL}
-RUN find ${SONATYPE_INSTALL} type d -exec chmod g+x {} +
+RUN find ${SONATYPE_INSTALL} -type d -exec chmod g+x {} +
 
 ENV MAX_HEAP=768m MIN_HEAP=256m JAVA_OPTS="-server -Djava.net.preferIPv4Stack=true" LAUNCHER_CONF="./conf/jetty.xml ./conf/jetty-requestlog.xml"
 
