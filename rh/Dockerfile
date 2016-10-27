@@ -1,4 +1,5 @@
 FROM docker-nexus:latest
+MAINTAINER bholmes@redhat.com
 
 COPY conf/nexus.xml ${SONATYPE_WORK}/conf/nexus.xml
 
