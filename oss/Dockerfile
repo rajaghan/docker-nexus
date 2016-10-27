@@ -63,7 +63,7 @@ ENV MAX_HEAP=768m MIN_HEAP=256m JAVA_OPTS="-server -Djava.net.preferIPv4Stack=tr
 
 CMD java \
   -Dnexus-work=${SONATYPE_WORK} \
-  -Dnexus-webapp-context-path=${CONTEXT_PATH}  \
+  -Dnexus-webapp-context-path=  \
   -Xms${MIN_HEAP} -Xmx${MAX_HEAP} \
   -cp 'conf/:lib/*' \
   ${JAVA_OPTS} \
