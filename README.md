@@ -1,53 +1,41 @@
-# sonatype/docker-nexus
+# docker-nexus for openshift
 
-Docker images for Sonatype Nexus Repository Manager 2 with the Oracle JDK.
-For Nexus Repository Manager 3, please refer to https://github.com/sonatype/docker-nexus3
+Based on sonatype/docker-nexus - https://github.com/sonatype/docker-nexus
+
+Docker images for Sonatype Nexus Repository Manager 2, using RHEL7 and the Open JDK.
 
 * [Notes](#notes)
   * [Persistent Data](#persistent-data)
-  * [Adding Nexus Plugins](#adding-nexus-plugins)
-* [Getting Help](#getting-help)
+  * [Red Hat Nexus Repositories](#red-hat-nexus-repositories)
 
 To build:
 ```
-# docker build --rm --tag sonatype/nexus oss/
-# docker build --rm --tag sonatype/nexus-pro pro/
+# oc new-app --strategy=docker --context-dir=oss http://github.com/benemon 
+# oc new-app --strategy=docker --context-dir=pro http://github.com/benemon
 ```
+This builds a new instance of Sonatype Nexus in a container.
 
-To run (if port 8081 is open on your host):
-
+To expose the Kubernetes service:
 ```
-# docker run -d -p 8081:8081 --name nexus sonatype/nexus:oss
+# oc expose service docker-nexus
 ```
-
-To determine the port that the container is listening on:
-
-```
-# docker ps -l
-```
-
-To test:
-
-```
-$ curl http://localhost:8081/nexus/service/local/status
-```
-
-To build, copy the Dockerfile and do the build:
-
-```
-$ docker build --rm=true --tag=sonatype/nexus .
-```
-
 
 ## Notes
+
+* Context dir is root, unlike a standard Nexus installation, which sits on /nexus
 
 * Default credentials are: `admin` / `admin123`
 
 * It can take some time (2-3 minutes) for the service to launch in a
-new container.  You can tail the log to determine once Nexus is ready:
+new container.  You can tail the log to determine once Nexus is ready. In order to do this, you need to identify the pod in which Nexus is running:
 
 ```
-$ docker logs -f nexus
+# oc get pods
+```
+
+Once the pod is identified, tail the logs with:
+```
+$ oc logs -f <pod name>
 ```
 
 * Installation of Nexus is to `/opt/sonatype/nexus`.  Notably:
@@ -55,9 +43,9 @@ $ docker logs -f nexus
   Parameters (`nexus-work` and `nexus-webapp-context-path`) defined
   here are overridden in the JVM invocation.
 
-* A persistent directory, `/sonatype-work`, is used for configuration,
+* A persistent directory, `/opt/sonatype/sonatype-work`, is used for configuration,
 logs, and storage. This directory needs to be writeable by the Nexus
-process, which runs as UID 200.
+process, which runs as a randomised UID in OpenShift, belonging to the root group. Therefore, the persistent directory structures are owned by the root group.
 
 * Environment variables can be used to control the JVM arguments
 
@@ -70,52 +58,31 @@ process, which runs as UID 200.
   * `LAUNCHER_CONF`.  A list of configuration files supplied to the
   Nexus bootstrap launcher.  Default: `./conf/jetty.xml ./conf/jetty-requestlog.xml`
 
-  These can be user supplied at runtime to control the JVM:
-
-  ```
-  $ docker run -d -p 8081:8081 --name nexus -e MAX_HEAP=768m sonatype/nexus
-  ```
-
+  These can be applied to the OpenShift deploymentconfig to control the JVM.
 
 ### Persistent Data
 
-There are two general approaches to handling persistent
-storage requirements with Docker. See [Managing Data in
-Containers](https://docs.docker.com/userguide/dockervolumes/) for
-additional information.
+Data can be persisted within OpenShift by adding a Persistent Volume Claim to the deploymentconfig. This should be mapped to `/opt/sonatype/sonatype-work`.
 
-  1. *Use a data volume container*.  Since data volumes are persistent
-  until no containers use them, a container can be created specifically for 
-  this purpose.  This is the recommended approach.  
+### Red Hat Nexus Repositories
 
-  ```
-  $ docker run -d --name nexus-data sonatype/nexus echo "data-only container for Nexus"
-  $ docker run -d -p 8081:8081 --name nexus --volumes-from nexus-data sonatype/nexus
-  ```
+Nexus can be configured to proxy and group repositories. The folder `rh` in this repository contains a Dockerfile based on a build of either oss/ or pro/ within the context of the current OpenShift namespace. It assumes that a previous image for `docker-nexus` exists, and will simply overlay a full configuration over the base configuration, which contains all the Red Hat Maven repositories, along with a Group repository call `redhat-all` - an amalgamation of every other Red Hat repository. This is provided for ease of use.
 
-  2. *Mount a host directory as the volume*.  This is not portable, as it
-  relies on the directory existing with correct permissions on the host.
-  However it can be useful in certain situations where this volume needs
-  to be assigned to certain underlying storage.  
+To use, build either oss or pro:
+```
+# oc new-build --strategy=docker --context-dir=oss http://github.com/benemon 
+# oc new-build --strategy=docker --context-dir=pro http://github.com/benemon
+```
+Note the use of `oc new-build` as opposed to `new-app`, as we don't need this image to be deployed.
 
-  ```
-  $ mkdir /some/dir/nexus-data && chown -R 200 /some/dir/nexus-data
-  $ docker run -d -p 8081:8081 --name nexus -v /some/dir/nexus-data:/sonatype-work sonatype/nexus
-  ```
+Once the build process has completed, you have your base image. From here we can call:
+```
+# oc new-app --strategy=docker --context-dir=rh http://github.com/benemon --name=nexus
+```
+Note the use of `--name` in order to differentiate this build from the base image build.
 
+Once the build is finished, you can expose the new Kubernetes service in much the same way as before:
+```
+# oc expose service nexus
+```
 
-### Adding Nexus Plugins
-
-Creating a docker image based on `sonatype/nexus` is the suggested
-process: plugins should be expanded to `/opt/sonatype/nexus/nexus/WEB-INF/plugin-repository`.
-See https://github.com/sonatype/docker-nexus/issues/9 for an example
-concerning the Nexus P2 plugins.
-
-## Getting Help
-
-Looking to contribute to our Docker image but need some help? There's a few ways to get information or our attention:
-
-* File a public issue [here on GitHub](https://github.com/sonatype/docker-nexus/issues)
-* Check out the [Nexus](http://stackoverflow.com/questions/tagged/nexus) tag on Stack Overflow
-* Pop into [our public HipChat room](https://www.hipchat.com/gW26B2y2Z) and ask us some questions
-* Check out the [Nexus Repository User List](https://groups.google.com/a/glists.sonatype.com/forum/?hl=en#!forum/nexus-users)
