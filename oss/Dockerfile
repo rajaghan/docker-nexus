@@ -48,7 +48,7 @@ RUN mkdir -p ${SONATYPE_INSTALL} \
 
 # RUN useradd -r -u 200 -m -c "nexus role account" -d ${SONATYPE_WORK} -s /bin/false nexus
 
-VOLUME ${SONATYPE_WORK}
+# VOLUME ${SONATYPE_WORK}
 
 EXPOSE 8081
 WORKDIR ${SONATYPE_INSTALL}
