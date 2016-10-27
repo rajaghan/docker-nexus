@@ -32,11 +32,8 @@ RUN mkdir -p ${SONATYPE_INSTALL} \
   && mv /tmp/nexus-${NEXUS_VERSION}/* ${SONATYPE_INSTALL} \
   && rm -rf /tmp/nexus-${NEXUS_VERSION}
 
-
 EXPOSE 8081
 WORKDIR ${SONATYPE_INSTALL}
-
-ADD conf/ ${SONATYPE_WORK}/
 
 # OpenShift permissions
 RUN chgrp -R 0 ${SONATYPE_HOME}
