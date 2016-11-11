@@ -10,8 +10,8 @@ Docker images for Sonatype Nexus Repository Manager 2, using RHEL7 and the Open 
 
 To build:
 ```
-# oc new-app --strategy=docker --context-dir=oss http://github.com/benemon 
-# oc new-app --strategy=docker --context-dir=pro http://github.com/benemon
+# oc new-app --strategy=docker --context-dir=oss --name=nexus http://github.com/benemon/docker-nexus 
+# oc new-app --strategy=docker --context-dir=pro --name=nexus http://github.com/benemon/docker-nexus
 ```
 This builds a new instance of Sonatype Nexus in a container.
 
@@ -70,14 +70,14 @@ Nexus can be configured to proxy and group repositories. The folder `rh` in this
 
 To use, build either oss or pro (assuming a build doesn't currently exist):
 ```
-# oc new-build --strategy=docker --context-dir=oss http://github.com/benemon 
-# oc new-build --strategy=docker --context-dir=pro http://github.com/benemon
+# oc new-build --strategy=docker --context-dir=oss --name=nexus-base http://github.com/benemon/docker-nexus 
+# oc new-build --strategy=docker --context-dir=pro --name=nexus-base http://github.com/benemon/docker-nexus 
 ```
 Note the use of `oc new-build` as opposed to `new-app`, as we don't need this image to be deployed.
 
 Once the build process has completed, you have your base image. From here we can call:
 ```
-# oc new-app --strategy=docker --context-dir=rh http://github.com/benemon --name=nexus
+# oc new-app --strategy=docker --context-dir=rh --name=nexus http://github.com/benemon/docker-nexus 
 ```
 Note the use of `--name` in order to differentiate this build from the base image build.
 
